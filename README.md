@@ -7,3 +7,12 @@ Make use of several multithreading pthread calls. Introduce multitasking, synchr
 
 *Language Used*  
 C
+
+*Things Learnt*  
+Multi threading and Processes 
+POSIX pthread  
+Microkernal- FreeRTOS  
+Synchronization-Mutex  
+Electronic Power System Board  
+
+
