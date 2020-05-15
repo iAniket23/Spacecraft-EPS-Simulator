@@ -26,8 +26,56 @@ uint16_t EPS_BATT[EPS_SIZE];
 
 // YOUR CODE HERE!
 
+long int voltage=0,current=0,temp=0;
+
+int rand_range(int min, int max) 
+{
+  srand(time(0)+clock()+rand());
+  return (uint16_t) (rand() % (max - min + 1)) + min;
+}
+
+uint16_t sc_get_voltage(void) 
+{
+  return (uint16_t) rand_range(10, 20); // 18
+}
+
+uint16_t sc_get_current(void) 
+{
+  return (uint16_t) rand_range(40, 50);
+}
+
+uint16_t sc_get_temp(void) 
+{
+  return (uint16_t) rand_range(350, 360);
+}
+
+
+
+void *firstthread(void *threadid)
+{ long tid;
+	tid= (long)threadid;
+	printf("It's thread %ld\n", tid);
+	while(1)
+	{
+	voltage = sc_get_voltage();
+    current = sc_get_current();
+    temp = sc_get_temp();
+    printf("Voltage is %ld\n",voltage );
+    printf("current is %ld\n",current );
+    printf("temp is %ld\n",temp);
+    sleep(3);
+     }
+     pthread_exit(NULL);
+
+}
+
 int main() {
   // initialize your threads and start the program
-  
-  return 0;
+	pthread_t threads[1];
+	long t1=1;
+
+	pthread_create(&threads[0], NULL, firstthread, (void *)t1);
+	
+	pthread_exit(NULL);
+
 }
