@@ -26,7 +26,7 @@ uint16_t EPS_BATT[EPS_SIZE];
 
 // YOUR CODE HERE!
 
-long int voltage=0,current=0,temp=0;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int rand_range(int min, int max) 
 {
@@ -52,30 +52,76 @@ uint16_t sc_get_temp(void)
 
 
 void *firstthread(void *threadid)
-{ long tid;
+{   long tid;
 	tid= (long)threadid;
 	printf("It's thread %ld\n", tid);
 	while(1)
-	{
-	voltage = sc_get_voltage();
-    current = sc_get_current();
-    temp = sc_get_temp();
-    printf("Voltage is %ld\n",voltage );
-    printf("current is %ld\n",current );
-    printf("temp is %ld\n",temp);
-    sleep(3);
+	{ pthread_mutex_lock(&mutex);
+	EPS_BATT[EPS_CURRENT_VAL] = sc_get_current();
+    EPS_BATT[EPS_VOLTAGE_VAL] = sc_get_voltage();
+    EPS_BATT[EPS_TEMPERATURE_VAL] = sc_get_temp();
+
+     pthread_mutex_unlock(&mutex);
+  
+    sleep(0.003);
      }
+     
+     pthread_exit(NULL);
+
+}
+void *secondthread(void *threadid2)
+{   long tid2;
+	tid2= (long)threadid2;
+	printf("It's thread %ld\n", tid2);
+	while(1)
+
+	{
+
+		pthread_mutex_lock(&mutex);
+		if ((EPS_BATT[EPS_CURRENT_VAL]>=(CURRENT_SAFE - WARNING_THRESHOLD) ) && (EPS_BATT[EPS_CURRENT_VAL] <= (CURRENT_SAFE + WARNING_THRESHOLD)))
+		{
+
+
+			EPS_BATT[EPS_CURRENT_STATE]= NOMINAL;
+			printf("NOMINAL \n");
+		} 
+
+		else if ((EPS_BATT[EPS_CURRENT_VAL]>=(CURRENT_SAFE - DANGER_THRESHOLD))&& (EPS_BATT[EPS_CURRENT_VAL] <= (CURRENT_SAFE + DANGER_THRESHOLD)))
+         {
+             EPS_BATT[EPS_CURRENT_STATE]= WARNING;
+             printf("WARNING \n" );
+
+         }
+         else
+         {
+
+         	EPS_BATT[EPS_CURRENT_STATE]= DANGER;
+         	printf("DANGER \n");
+         }
+
+
+
+         printf("STATE : %d\n",EPS_BATT[EPS_CURRENT_VAL]);
+
+         pthread_mutex_unlock(&mutex);
+         sleep(3);
+
+    }
+     
      pthread_exit(NULL);
 
 }
 
+
 int main() {
   // initialize your threads and start the program
-	pthread_t threads[1];
-	long t1=1;
+	pthread_t threads[2];
+	long t1=1,t2=2;
+	pthread_attr_t attr;
 
 	pthread_create(&threads[0], NULL, firstthread, (void *)t1);
-	
+	pthread_create(&threads[1], NULL, secondthread, (void *)t2);
+		
 	pthread_exit(NULL);
 
 }
